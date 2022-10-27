@@ -18,7 +18,7 @@ function channel:onReceiveMessage(msg)
 		self.rateLimiter = rateLimit(5, 5, true) -- allow 5 messages per 5 seconds per channel (ratelimiter storage is weak in this case)
 	end
 
-	if self.rateLimiter(msg.author.id) then
+	if self.rateLimiter(msg.author.id) == false then
 		self:pushMessage(msg) -- push message to channel if ratelimit not reached
 	end
 end
@@ -28,7 +28,7 @@ end
 local rateLimiter = require("ratelimit")(60 * 60, 3) -- allow 3 bans per 1 hour
 
 function canBan(admin, user)
-	if rateLimiter(admin.id) then
+	if rateLimiter(admin.id) == false then
 		ban(admin, user)
 	end
 end
