@@ -5,7 +5,7 @@ A ratelimit library that allow X times in X time.
 ## Installation
 
 1. Open your project folder
-2. Run `apt install git && git clone git@github.com:Be1zebub/Ratelimit.lua.git deps/ratelimit.lua`
+2. Run `apt install git && git clone git@github.com:Be1zebub/Ratelimit.lua.git deps/ratelimit`
 3. Have fun ;)
 
 ## Examples
