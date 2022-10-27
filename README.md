@@ -33,6 +33,25 @@ function canBan(admin, user)
 	end
 end
 ```
+```lua
+function Command:SetCooldown(length, count, weak)
+	self.cooldown = ratelimit(length, count, weak)
+	return self
+end
+
+function Command:testCooldown(msg)
+	if self.cooldown then
+		local cooldown, left = self.cooldown(msg.author.id) -- it can return time before cooldown ends
+		if cooldown then
+			msg:addReaction("🕖")
+			numberReacts(msg, left)
+			return true
+		end
+	end
+
+	return false
+end
+```
 
 Join to our developers community [incredible-gmod.ru](https://discord.incredible-gmod.ru)
 [![thumb](https://i.imgur.com/LYGqTnx.png)](https://discord.incredible-gmod.ru)
