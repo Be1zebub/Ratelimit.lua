@@ -1,6 +1,6 @@
 # Ratelimit.lua
 
-A ratelimit library that allow X times in X time.
+A ratelimit library that allow X times in Y time.
 
 ## Installation
 
