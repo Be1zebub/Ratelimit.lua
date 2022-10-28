@@ -53,5 +53,5 @@ function Command:testCooldown(msg)
 end
 ```
 
-### Join to our developers community [incredible-gmod.ru](https://discord.incredible-gmod.ru)
+#### Join to our developers community [incredible-gmod.ru](https://discord.incredible-gmod.ru)
 [![thumb](https://i.imgur.com/LYGqTnx.png)](https://discord.incredible-gmod.ru)
