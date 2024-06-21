@@ -28,48 +28,44 @@ end
 -- src:
 
 return function(length, count, weak, getTime)
-	getTime = getTime or os.time
+    getTime = getTime or CurTime or os.time
 
-	local storage = weak and setmetatable({}, {__mode = "k"}) or {}
-	local bans = {}
+    local storage = weak and setmetatable({}, {__mode = "k"}) or {}
+    local bans = {}
 
-	return function(uid)
-		local curTime = getTime()
+    return function(uid)
+        local curTime = getTime()
 
-		if bans[uid] then
-			if bans[uid] > curTime then
-				return true, bans[uid] - curTime
-			end
-			bans[uid] = nil
-		end
+        if bans[uid] then
+            if bans[uid] > curTime then
+                return true, bans[uid] - curTime
+            end
+            bans[uid] = nil
+        end
 
-		local instance = storage[uid]
-		if instance == nil then
-			instance = weak and setmetatable({}, {__mode = "k"}) or {}
-			storage[uid] = instance
-		end
+        local instance = storage[uid]
+        if instance == nil then
+            instance = {}
+            storage[uid] = instance
+        end
 
-		if #instance == count then
-			local lmit_reached, min = true, math.huge
+        local i = 1
+        while i <= #instance do
+            if instance[i] < curTime - length then
+                table.remove(instance, i)
+            else
+                i = i + 1
+            end
+        end
 
-			for i = count, 1, -1 do
-				if instance[i] < curTime - length then
-					instance[i] = nil
-					lmit_reached = false
-				else
-					min = math.min(min, instance[i])
-				end
-			end
+        if #instance >= count then
+            local min = math.min(table.unpack(instance))
+            local left = length - (curTime - min)
+            bans[uid] = curTime + left
+            return true, left
+        end
 
-			if lmit_reached then
-				local left = length + curTime - min
-				bans[uid] = curTime + left
-
-				return true, left
-			end
-		end
-
-		table.insert(instance, curTime)
-		return false
-	end
+        table.insert(instance, curTime)
+        return false
+    end
 end
