@@ -31,7 +31,7 @@ return function(length, count, weak, getTime)
     getTime = getTime or CurTime or os.time
 
     local storage = weak and setmetatable({}, {__mode = "k"}) or {}
-    local bans = {}
+    local bans = weak and setmetatable({}, {__mode = "k"}) or {}
 
     return function(uid)
         local curTime = getTime()
