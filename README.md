@@ -1,6 +1,7 @@
 # Ratelimit.lua
 
-A ratelimit library that allow X times in Y time.
+A ratelimit library that allow X times in Y time. 
+like: allow 5 chat messages in 5 seconds (with same global ratelimit it much convenient for user than hard ratelimit) 
 
 ## Installation
 
