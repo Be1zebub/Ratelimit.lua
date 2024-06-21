@@ -67,5 +67,5 @@ return function(length, count, weak, getTime)
 
         table.insert(instance, curTime)
         return false
-    end
+    end, storage, bans
 end
