@@ -1,12 +1,15 @@
--- from incredible-gmod.ru with <3
+-- from gmod.one with <3
 -- https://github.com/Be1zebub/Ratelimit.lua
 
+-- Sliding window rate limiting lib
+-- inspired by discord api rate limiting
+
 --[[ usage example:
-local rateLimit = require("ratelimit")
+local newRatelimiter = require("ratelimit")
 
 function channel:onReceiveMessage(msg)
 	if self.rateLimiter == nil then
-		self.rateLimiter = rateLimit(5, 5, true) -- allow 5 messages per 5 seconds per channel (ratelimiter storage is weak in this case)
+		self.rateLimiter = newRatelimiter(5, 5) -- allow 5 messages per 5 seconds (per channel)
 	end
 
 	if self.rateLimiter(msg.author.id) then
@@ -16,56 +19,98 @@ end
 ]]--
 
 --[[ usage example 2:
-local rateLimiter = require("ratelimit")(60 * 60, 3) -- allow 3 bans per 1 hour
+local rateLimiter = require("ratelimit")(60 * 60, 3, true) -- allow 3 bans per 1 hour
 
-function canBan(admin, user)
-	if rateLimiter(admin.id) then
-		ban(admin, user)
+command.new("ban")
+:SetPermission("admin")
+:OnExecute(function(ply, target, length, reason)
+	local success, banDuration = rateLimiter(ply)
+
+	if success then
+		target:Ban(length, reason)
+		chat.broadcast(ply:Name() .. " has banned " .. target:Name() .. " for " .. length .. " seconds. Reason: " .. reason)
+	else
+		chat.send(ply, "You are being rate limited. Please wait .. " .. math.Round(banDuration / 60) .. " minutes before banning again.")
 	end
-end
+end)
 ]]--
 
--- src:
-
 return function(length, count, weak, getTime)
-    getTime = getTime or CurTime or os.time
+	assert(type(length) == "number" and length > 0, "length must be a positive number")
+	assert(type(count) == "number" and count > 0, "count must be a positive number")
 
-    local storage = weak and setmetatable({}, {__mode = "k"}) or {}
-    local bans = weak and setmetatable({}, {__mode = "k"}) or {}
+	getTime = getTime or CurTime or os.time
+	local requests = weak and setmetatable({}, {__mode = "k"}) or {}
+	local bans = weak and setmetatable({}, {__mode = "k"}) or {}
 
-    return function(uid)
-        local curTime = getTime()
+	local function rateLimiter(uid)
+		local curTime = getTime()
 
-        if bans[uid] then
-            if bans[uid] > curTime then
-                return true, bans[uid] - curTime
-            end
-            bans[uid] = nil
-        end
+		-- Check if user is currently banned
+		if bans[uid] and bans[uid] > curTime then
+			return false, bans[uid] - curTime -- false = blocked, return remaining ban time
+		end
 
-        local instance = storage[uid]
-        if instance == nil then
-            instance = {}
-            storage[uid] = instance
-        end
+		-- Clear expired ban
+		if bans[uid] then
+			bans[uid] = nil
+		end
 
-        local i = 1
-        while i <= #instance do
-            if instance[i] < curTime - length then
-                table.remove(instance, i)
-            else
-                i = i + 1
-            end
-        end
+		-- Get or create user's request history
+		local instance = requests[uid]
+		if not instance then
+			instance = {}
+			requests[uid] = instance
+		end
 
-        if #instance >= count then
-            local min = math.min(table.unpack(instance))
-            local left = length - (curTime - min)
-            bans[uid] = curTime + left
-            return true, left
-        end
+		-- Remove expired entries
+		local validEntries = {}
+		local threshold = curTime - length
 
-        table.insert(instance, curTime)
-        return false
-    end, storage, bans
+		for _, timestamp in ipairs(instance) do
+			if timestamp >= threshold then
+				validEntries[#validEntries + 1] = timestamp
+			end
+		end
+		requests[uid] = validEntries
+
+		-- Check if rate limit is exceeded
+		if #validEntries >= count then
+			local oldestValid = validEntries[1] -- entries are naturally sorted by insertion time
+			local banDuration = length - (curTime - oldestValid)
+
+			bans[uid] = curTime + banDuration
+
+			return false, banDuration -- false = blocked, return ban duration
+		end
+
+		-- Add current request to history
+		validEntries[#validEntries + 1] = curTime
+
+		return true, 0 -- true = allowed
+	end
+
+	local function cleanup()
+		requests = weak and setmetatable({}, {__mode = "k"}) or {}
+		bans = weak and setmetatable({}, {__mode = "k"}) or {}
+	end
+
+	local function getRequests(uid)
+		return requests[uid]
+	end
+
+	local function getBan(uid)
+		return bans[uid]
+	end
+
+	return setmetatable({
+		cleanup = cleanup,
+		getRequests = getRequests,
+		getBan = getBan
+	}, {
+		__call = function(_, uid)
+			return rateLimiter(uid)
+		end,
+		__newindex = function() end
+	})
 end
