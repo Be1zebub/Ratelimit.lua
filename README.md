@@ -1,7 +1,9 @@
 # Ratelimit.lua
 
 A ratelimit library that allow X times in Y time.  
-like: allow 5 chat messages in 5 seconds (with same global ratelimit it much convenient for user than hard ratelimit) 
+Sliding window rate limiting - inspired by discord api.
+
+eg allow 5 messages in 5 seconds
 
 ## Installation
 
@@ -12,14 +14,14 @@ like: allow 5 chat messages in 5 seconds (with same global ratelimit it much con
 ## Examples
 
 ```lua
-local rateLimit = require("ratelimit")
+local newRatelimiter = require("ratelimit")
 
 function channel:onReceiveMessage(msg)
 	if self.rateLimiter == nil then
-		self.rateLimiter = rateLimit(5, 5, true) -- allow 5 messages per 5 seconds per channel (ratelimiter storage is weak in this case)
+		self.rateLimiter = newRatelimiter(5, 5) -- allow 5 messages per 5 seconds (per channel)
 	end
 
-	if self.rateLimiter(msg.author.id) == false then
+	if self.rateLimiter(msg.author.id) then
 		self:pushMessage(msg) -- push message to channel if ratelimit not reached
 	end
 end
@@ -28,31 +30,19 @@ end
 ```lua
 local rateLimiter = require("ratelimit")(60 * 60, 3) -- allow 3 bans per 1 hour
 
-function canBan(admin, user)
-	if rateLimiter(admin.id) == false then
-		ban(admin, user)
-	end
-end
-```
-```lua
-function Command:SetCooldown(length, count, weak)
-	self.cooldown = ratelimit(length, count, weak)
-	return self
-end
+command.new("ban")
+:SetPermission("admin")
+:OnExecute(function(ply, target, length, reason)
+	local success, banDuration = rateLimiter(ply:SteamID())
 
-function Command:testCooldown(msg)
-	if self.cooldown then
-		local cooldown, left = self.cooldown(msg.author.id) -- it can return time before cooldown ends
-		if cooldown then
-			msg:addReaction("🕖")
-			numberReacts(msg, left)
-			return true
-		end
+	if success then
+		target:Ban(length, reason)
+		chat.broadcast(ply:Name() .. " has banned " .. target:Name() .. " for " .. length .. " seconds. Reason: " .. reason)
+	else
+		chat.send(ply, "You are being rate limited. Please wait .. " .. math.Round(banDuration / 60) .. " minutes before banning again.")
 	end
-
-	return false
-end
+end)
 ```
 
-#### Join to our developers community [incredible-gmod.ru](https://discord.incredible-gmod.ru)
-[![thumb](https://i.imgur.com/LYGqTnx.png)](https://discord.incredible-gmod.ru)
+#### Join to our developers community [gmod.one](https://discord.gmod.one)
+[![thumb](https://i.imgur.com/LYGqTnx.png)](https://discord.gmod.one)
