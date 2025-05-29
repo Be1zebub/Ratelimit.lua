@@ -19,7 +19,7 @@ end
 ]]--
 
 --[[ usage example 2:
-local rateLimiter = require("ratelimit")(60 * 60, 3, true) -- allow 3 bans per 1 hour
+local rateLimiter = require("ratelimit")(60 * 60, 3) -- allow 3 bans per 1 hour
 
 command.new("ban")
 :SetPermission("admin")
