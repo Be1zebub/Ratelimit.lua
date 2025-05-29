@@ -24,7 +24,7 @@ local rateLimiter = require("ratelimit")(60 * 60, 3, true) -- allow 3 bans per 1
 command.new("ban")
 :SetPermission("admin")
 :OnExecute(function(ply, target, length, reason)
-	local success, banDuration = rateLimiter(ply)
+	local success, banDuration = rateLimiter(ply:SteamID())
 
 	if success then
 		target:Ban(length, reason)
