@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2022 incredible-gmod.ru
+Copyright (c) 2025 gmod.one
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
