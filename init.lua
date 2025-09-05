@@ -77,7 +77,7 @@ return function(length, count, weak, getTime)
 		-- Check if rate limit is exceeded
 		if #validEntries >= count then
 			local oldestValid = validEntries[1] -- entries are naturally sorted by insertion time
-			local banDuration = length - (curTime - oldestValid)
+			local banDuration = math.max(0, math.min(length, length - (curTime - oldestValid))) -- ensure banDuration can't be negative or greater than length
 
 			bans[uid] = curTime + banDuration
 
@@ -114,3 +114,4 @@ return function(length, count, weak, getTime)
 		__newindex = function() end
 	})
 end
+
