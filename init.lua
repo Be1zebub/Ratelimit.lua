@@ -115,7 +115,7 @@ local newRatelimiter = require("ratelimit")
 
 function channel:onReceiveMessage(msg)
 	if self.rateLimiter == nil then
-		self.rateLimiter = newRatelimiter(5, 5) -- allow 5 messages per 5 seconds (per channel)
+		self.rateLimiter = newRatelimiter({len = 5, count = 5}) -- allow 5 messages per 5 seconds (per channel)
 	end
 
 	if self.rateLimiter(msg.author.id) then
@@ -125,7 +125,7 @@ end
 ]]--
 
 --[[ usage example 2:
-local rateLimiter = require("ratelimit")(60 * 60, 3) -- allow 3 bans per 1 hour
+local rateLimiter = require("ratelimit")({len = 60 * 60, count = 3, debug = {enable = true, name = "ban-command"}}) -- allow 3 bans per 1 hour
 
 command.new("ban")
 :SetPermission("admin")
@@ -140,4 +140,3 @@ command.new("ban")
 	end
 end)
 ]]--
-
