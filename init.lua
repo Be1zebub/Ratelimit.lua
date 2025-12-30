@@ -4,25 +4,28 @@
 -- Sliding window rate limiting lib
 -- inspired by discord api rate limiting
 
-local enableDebug = false
+return function(config)
+	local length = config.len -- number of seconds
+	local count = config.count -- number of requests
+	local weak = config.weak -- boolean
+	local getTime = config.getTime or CurTime or os.time -- function
+	local debugging = config.debug -- table {enable = boolean, name = string}
 
-local function debugLog(msg, ...)
-	if enableDebug == false then return end
-
-	if ... then
-		msg = msg:format(...)
-	end
-
-	print("[rate-limiter debug]: " .. msg)
-end
-
-return function(length, count, weak, getTime)
 	assert(type(length) == "number" and length > 0, "length must be a positive number")
 	assert(type(count) == "number" and count > 0, "count must be a positive number")
 
-	getTime = getTime or CurTime or os.time
 	local requests = weak and setmetatable({}, {__mode = "k"}) or {}
 	local bans = weak and setmetatable({}, {__mode = "k"}) or {}
+
+	local function debugLog(msg, ...)
+		if not (debugging and debugging.enable) then return end
+
+		if ... then
+			msg = msg:format(...)
+		end
+
+		print("[rate-limiter debug]: " .. tostring(debugging.name) .. " - " .. msg)
+	end
 
 	local function rateLimiter(uid)
 		local curTime = getTime()
@@ -137,3 +140,4 @@ command.new("ban")
 	end
 end)
 ]]--
+
